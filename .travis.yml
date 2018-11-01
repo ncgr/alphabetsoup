@@ -13,10 +13,11 @@ before_script:
    - cd alphabetsoup/test
 script:
    - alphabetsoup --help
-   - alphabetsoup --dedup --no-write --no-log --first_n 1 .
-   - alphabetsoup --minlen 200 --no-write .
+   - alphabetsoup --version
+   - alphabetsoup --dedup  --no-log --first_n 1 --log_lengths -v .
+   - alphabetsoup --minlen 200 --no-stripdash -q .
    - alphabetsoup -v .
-   - alphabetsoup --defrag --progress .
+   - alphabetsoup --defrag --overwrite --progress --maxambig 1 .
    - cat logs/alphabetsoup.log
    - cat logs/alphabetsoup.tsv
 after_success:
