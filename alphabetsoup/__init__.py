@@ -56,9 +56,10 @@ DEFAULT_FIRST_N = 0 # only process this many files
 STARTTIME = datetime.now()
 DEFAULT_MINLEN = 0 # minimum gene size in residues
 DEFAULT_MINSEQS = 0 # minimum number of sequences per file
-DEFAULT_MAXAMBIG = 0 # maximum number of ambiguous characters per gene, (0 = all)
+DEFAULT_MAXAMBIG = 0.0 # maximum number of ambiguous characters per gene, (0 = all)
 DEFAULT_FILETYPES = ('*.faa', '*.fa', '*.fasta')
-LOG_PATH = Path('.')/ 'logs'
+LOG_DIR = 'log'
+LOG_PATH = Path('.')/ LOG_DIR
 #
 # global logger object
 #
@@ -104,13 +105,13 @@ def init_dual_logger(file_log_level=DEFAULT_FILE_LOGLEVEL,
             stderrHandler.setFormatter(stderrFormatter)
             stderrHandler.setLevel(_log_level)
             logger.addHandler(stderrHandler)
-            if _ctx().params['logs']: # start a log file in LOG_PATH
+            if _ctx().params['log']: # start a log file in LOG_PATH
                 logfile_path = LOG_PATH / (PROGRAM_NAME + '.log')
                 if not LOG_PATH.is_dir():  # create LOG_PATH
                     try:
                         logfile_path.parent.mkdir(mode=0o755, parents=True)
                     except OSError:
-                        logger.error('Unable to create logfile directory "%s"',
+                        logger.error('Unable to create log directory "%s"',
                                      logfile_path.parent)
                         raise OSError
                 else:
@@ -118,7 +119,7 @@ def init_dual_logger(file_log_level=DEFAULT_FILE_LOGLEVEL,
                         try:
                             logfile_path.unlink()
                         except OSError:
-                            logger.error('Unable to remove existing logfile "%s"',
+                            logger.error('Unable to remove existing log file "%s"',
                                          logfile_path)
                             raise OSError
                 logfileHandler = logging.FileHandler(str(logfile_path))
@@ -170,19 +171,17 @@ def init_user_context_obj(initial_obj=None):
 @click.option('--minlen', default=DEFAULT_MINLEN,show_default=True,
                help='Minimum sequence length.')
 @click.option('--minseqs', default=DEFAULT_MINSEQS,show_default=True,
-               help='Minimum number of sequences in file.')
+               help='Minimum sequences in file.')
 @click.option('--maxambig', default=DEFAULT_MAXAMBIG,
-               help='Maximum # of ambiguous residues. [default:any]')
-@click.option('--logs/--no-logs', is_flag=True, show_default=True,
-              default=True, help='Write analysis in ./logs.')
-@click.option('--log_lengths/--no-log_lengths', is_flag=True,
-              show_default=True, default=False, help='Write lengths to log.')
+               help='Max fraction ambiguous. [default:any]')
+@click.option('--log/--no-log', is_flag=True, show_default=True,
+              default=True, help='Write analysis in ./' + LOG_DIR +'.')
+@click.option('--lengths/--no-lengths', is_flag=True,
+              show_default=True, default=True, help='Compute lengths.')
 @click.option('--dedup/--no-dedup', is_flag=True, show_default=True,
               default=False, help='De-duplicate sequences.')
 @click.option('--defrag/--no-defrag', is_flag=True, show_default=True,
               default=False, help='Remove exact substrings.')
-@click.option('--histbeginning/--no-histbeginning', is_flag=True, show_default=True,
-              default=False, help='Show only beginning of histograms.')
 @click.option('--stripdash/--no-stripdash', is_flag=True, show_default=True,
               default=True, help='Remove "-" characters.')
 @click.option('--overwrite/--no-overwrite', is_flag=True, show_default=True,
@@ -200,16 +199,15 @@ def cli(in_path,
         quiet,
         progress,
         first_n,
-        logs,
+        log,
         overwrite,
         minlen,
         minseqs,
         maxambig,
         dedup,
-        histbeginning,
         stripdash,
         defrag,
-        log_lengths):
+        lengths):
     """alphabetsoup -- fix alphabet and other problems in protein FASTA files
     """
     if quiet or verbose:
@@ -238,9 +236,10 @@ def cli(in_path,
                       remove_duplicates=dedup,
                       remove_dashes=stripdash,
                       remove_substrings=defrag,
-                      lengths=log_lengths).compute()
-    if logs:
-        process_logs(LOG_PATH, results, logger, beginning_only=histbeginning)
+                      lengths=lengths).compute()
+    if log:
+        logger.info('Processing log files serially:')
+        process_logs(LOG_PATH, results, logger)
     #
     # Transpose results and put Name as first column
     #

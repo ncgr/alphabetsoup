@@ -11,6 +11,7 @@ from .common import *
 
 ALPHABET = IUPACData.protein_letters + 'X' + '-'
 LOGINT_FMT = '%s\t%s\t%s\t%d'
+LOGFLOAT_FMT = '%s\t%s\t%s\t%f'
 LOGSTR_FMT = '%s\t%s\t%s\t%s'
 
 class DuplicateIDDict(defaultdict):
@@ -20,15 +21,7 @@ class DuplicateIDDict(defaultdict):
         super().__init__(list)
 
     def get(self,k):
-        dup_list = [k] + self[k]
-        # Make a prefixed list with bracked, discarded because too complex later
-        #char_tuples = zip(*dup_list)
-        #prefix_tuples = itertools.takewhile(lambda x: all(x[0] == y for y in x),
-        #                                    char_tuples)
-        #prefix = ''.join(x[0] for x in prefix_tuples)
-        #prefix_len = len(prefix)
-        #mangled = prefix + '{' + '|'.join(id[prefix_len:] for id in dup_list)+ '}'
-        return '|'.join(dup_list)
+        return '|'.join([k] + self[k])
 
 
 def process_file(file,
@@ -77,7 +70,7 @@ def process_file(file,
                                  file.name,
                                  record.id,
                                  SHORT_NAME,
-                                 min_len - len(record.seq) + 1)
+                                 len(record.seq))
                 continue
             # count duplicates and optionally discard
             seq_hash = zlib.adler32(bytearray(str(seq),'utf-8'))
@@ -87,23 +80,23 @@ def process_file(file,
                 n_dups += 1
                 first_ID = seq_hash_dict[seq_hash]
                 duplicate_ID_dict[first_ID].append(record.id)
-                logger.debug(LOGSTR_FMT,
-                             file.name,
-                             record.id,
-                             DUP_NAME,
-                             first_ID)
                 if remove_duplicates:
+                    logger.debug(LOGSTR_FMT,
+                                 file.name,
+                                 record.id,
+                                 DUP_NAME,
+                                 first_ID)
                     continue
             # count interior X's and discard if more than max_ambiguous
             ambig = sum([i =='X' for i in seq])
             if ambig > max_ambiguous:
                 n_interior_ambig += 1
                 if logger:
-                    logger.debug(LOGINT_FMT,
+                    logger.debug(LOGFLOAT_FMT,
                                  file.name,
                                  record.id,
                                  AMBIG_NAME,
-                                 ambig)
+                                 ambig*100./len(seq))
                 continue
             record.seq = seq.toseq()
             out_sequences.append(record)
@@ -171,7 +164,7 @@ def process_file(file,
             with file.open('w') as output_handle:
                 SeqIO.write(out_sequences,output_handle,'fasta')
         else:
-            logger.warn('file %s has only %d sequences after processing, removed',
+            logger.debug('file %s has only %d sequences after processing, removed',
                         file.name, len(out_sequences))
             file.unlink()
     return (file.name,
