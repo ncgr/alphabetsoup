@@ -11,23 +11,18 @@ from pathlib import Path
 #
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 #
 # module imports
 #
 from .common import *
 #
-# global variables
+# read values from the log file and make optional plots
 #
-MIN_HIST_LEN = 50
-PLOT_TYPES = ['png','svg']
-
-def process_logs(path, stats, logger):
+def process_logs(stats, logger):
     #
     # write overall stats
     #
-    with (path / 'alphabetsoup_stats.tsv').open('w', newline='') as resultfh:
+    with (LOG_PATH / (PROGRAM_NAME + '_stats.tsv')).open('w', newline='') as resultfh:
         writer = csv.writer(resultfh, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['#'+ STAT_COLS[1]] + list(STAT_COLS[2:]) + [STAT_COLS[0]])
         for row in stats:
@@ -87,36 +82,13 @@ def process_logs(path, stats, logger):
         stat_len = len(stat_frame)
         if stat_len > 0:
             stat_frame = stat_frame.sort_values(['value', 'record','file'])
-            stat_frame.to_csv(path/(stat_name.rstrip('%')+'.tsv'),
+            stat_frame.to_csv(LOG_PATH/(stat_name.rstrip('%')+'.tsv'),
                               sep='\t',
                               index=False,
                               header=['#'+stat_name,'id', 'file'])
             if stat_len > MIN_HIST_LEN:
                 dist = np.array(stat_frame['value'])
-                mean = dist.mean()
-                label = '%d' % stat_len
-                # do histogram plot with kernel density estimate
-                sns.distplot(np.log10(dist),
-                             rug=True,
-                             rug_kws={'color': 'b'},
-                             kde_kws={'color': 'k',
-                                      'linewidth': 1,
-                                      'label': 'KDE',
-                                      'cumulative': False},
-                             hist_kws={'histtype': 'step',
-                                       'linewidth': 2,
-                                       'alpha': 1,
-                                       'color': 'b',
-                                       'cumulative': False}
-                )
-                plt.title('%s histogram of %s values, mean=%.1f'
-                          %(stat_name, label, mean))
-                plt.xlabel('Log ' + stat_name)
-                plt.ylabel('Frequency')
-                for ext in PLOT_TYPES:
-                   plt.savefig(path/('%s-hist.'%(stat_name.rstrip('%')) + ext),
-                               bbox_inches='tight')
-                plt.close('all')
+                make_histogram(dist, stat_name, log10=True)
     for graph_name in GRAPH_TYPES:
         graph_frame = pd.DataFrame(graph_dict[graph_name],
                                    columns=['file','id','duplicate'])
@@ -124,10 +96,10 @@ def process_logs(path, stats, logger):
         if graph_len > 0:
             graph_frame = graph_frame.sort_values(['file', 'id', 'duplicate']
                                                   ).reindex(index=list(range(graph_len)))
-            graph_frame.to_csv(path/(graph_name+'.tsv'),
+            graph_frame.to_csv(LOG_PATH/(graph_name+'.tsv'),
                                sep='\t',
                                index=False,
                                header=['#file', 'id', graph_name])
     if len(synonym_dict):
-        with (path/'synonyms.json').open('w') as synonym_fh:
+        with (LOG_PATH/'synonyms.json').open('w') as synonym_fh:
             json.dump(synonym_dict, synonym_fh)

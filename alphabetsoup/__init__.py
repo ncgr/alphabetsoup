@@ -14,7 +14,7 @@ import functools
 import locale
 import logging
 import sys
-from pathlib import Path
+import warnings
 from datetime import datetime
 #
 # third-party imports
@@ -43,7 +43,6 @@ for localename in ['en_US', 'en_US.utf8', 'English_United_States']:
     except:
         continue
 
-PROGRAM_NAME = 'alphabetsoup'
 AUTHOR = 'Joel Berendzen'
 EMAIL = 'joelb@ncgr.org'
 COPYRIGHT = """Copyright (C) 2018, The National Center for Genome Resources.  All rights reserved.
@@ -58,8 +57,6 @@ DEFAULT_MINLEN = 0 # minimum gene size in residues
 DEFAULT_MINSEQS = 0 # minimum number of sequences per file
 DEFAULT_MAXAMBIG = 0.0 # maximum number of ambiguous characters per gene, (0 = all)
 DEFAULT_FILETYPES = ('*.faa', '*.fa', '*.fasta')
-LOG_DIR = 'log'
-LOG_PATH = Path('.')/ LOG_DIR
 #
 # global logger object
 #
@@ -133,6 +130,7 @@ def init_dual_logger(file_log_level=DEFAULT_FILE_LOGLEVEL,
             return f(*args, **kwargs)
         return wrapper
     return decorator
+
 
 def init_user_context_obj(initial_obj=None):
     '''Put info from global options into user context dictionary
@@ -214,6 +212,8 @@ def cli(in_path,
         progress = False
     if defrag:
         dedup = True
+    if not verbose:
+        warnings.filterwarnings('ignore')
 
     logger.debug('')
     in_path = Path(in_path)
@@ -222,9 +222,8 @@ def cli(in_path,
         files.extend(in_path.rglob(ext))
     if first_n > 0 and len(files) > first_n:
         files = files[:first_n]
-    if progress:
+    if progress and not quiet:
         logger.info('Processing %d files in parallel:', len(files))
-    if progress:
         ProgressBar().register()
     bag = db.from_sequence(files)
     results = bag.map(process_file,
@@ -238,8 +237,9 @@ def cli(in_path,
                       remove_substrings=defrag,
                       lengths=lengths).compute()
     if log:
-        logger.info('Processing log files serially:')
-        process_logs(LOG_PATH, results, logger)
+        if not quiet:
+            logger.info('Processing log files serially:')
+        process_logs(results, logger)
     #
     # Transpose results and put Name as first column
     #
@@ -249,7 +249,15 @@ def cli(in_path,
     if not quiet:
         print('Quantity\tSum\tMean')
         print('%s:\t%d\t0' %('Files'.rjust(max_qty_len), len(files)))
-        for col_name in STAT_COLS[1:]:
-            column = df[col_name]
-            print('%s:\t%d\t%.3f'%(col_name.rjust(max_qty_len),column.sum(),column.mean()))
+
+    for stat_name in STAT_COLS[1:]:
+        dist = df[stat_name]
+        stat_len = len(dist)
+        mean = dist.mean()
+        if not quiet:
+            print('%s:\t%d\t%.3f'%(stat_name.rjust(max_qty_len),
+                               dist.sum(),
+                               mean))
+        if log and max(dist)>0 and stat_len > MIN_HIST_LEN:
+            make_histogram(dist, stat_name)
     sys.exit(0)

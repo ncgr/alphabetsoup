@@ -38,7 +38,7 @@ def process_file(file,
         logger.debug('processing %s', file)
     out_sequences = []
     out_len = 0
-    n_interior_ambig = 0
+    n_ambig = 0
     seq_hash_dict = {}
     n_dups = 0
     n_substrings = 0
@@ -90,7 +90,7 @@ def process_file(file,
             # count interior X's and discard if more than max_ambiguous
             ambig = sum([i =='X' for i in seq])
             if ambig > max_ambiguous:
-                n_interior_ambig += 1
+                n_ambig += 1
                 if logger:
                     logger.debug(LOGFLOAT_FMT,
                                  file.name,
@@ -152,12 +152,6 @@ def process_file(file,
                              record.id,
                              LENGTH_NAME,
                              len(record.seq))
-        if logger:
-            logger.debug(LOGINT_FMT,
-                         file.name,
-                         record.id,
-                         SEQS_NAME,
-                         len(out_sequences))
         small = 0
     if write:
         if not small:
@@ -171,7 +165,7 @@ def process_file(file,
             n_seqs_in,
             len(out_sequences),
             out_len,
-            n_interior_ambig,
+            n_ambig,
             n_short,
             small,
             n_dups,
