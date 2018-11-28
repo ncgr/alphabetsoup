@@ -28,17 +28,24 @@ STAT_COLS = ['name',
              'n_small',
              'n_dups',
              'n_substr']
-MIN_HIST_LEN = 50
-PLOT_TYPES = ['png','svg']
+MIN_HIST_LEN = 5
+MAX_BINS = 10
+PLOT_TYPES = ['png', 'svg']
 LOG_DIR = 'log'
-LOG_PATH = Path('.')/ LOG_DIR
+LOG_PATH = Path('.') / LOG_DIR
+
 
 def make_histogram(dist, name, log10=False):
     # do histogram plot with kernel density estimate
     mean = dist.mean()
     if log10:
         dist = np.log10(dist)
+    if len(dist) < MAX_BINS:
+        bins = len(dist)
+    else:
+        bins = MAX_BINS
     sns.distplot(dist,
+                 bins=bins,
                  rug=True,
                  rug_kws={'color': 'b'},
                  kde_kws={'color': 'k',

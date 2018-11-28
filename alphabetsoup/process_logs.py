@@ -14,17 +14,23 @@ import pandas as pd
 #
 # module imports
 #
-from .common import *
+from .common import make_histogram, STAT_COLS, LOG_PATH, PROGRAM_NAME,\
+    STAT_TYPES, MIN_HIST_LEN, GRAPH_TYPES, FLOAT_TYPES
 #
 # read values from the log file and make optional plots
 #
+
+
 def process_logs(stats, logger):
     #
     # write overall stats
     #
-    with (LOG_PATH / (PROGRAM_NAME + '_stats.tsv')).open('w', newline='') as resultfh:
-        writer = csv.writer(resultfh, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['#'+ STAT_COLS[1]] + list(STAT_COLS[2:]) + [STAT_COLS[0]])
+    with (LOG_PATH / (PROGRAM_NAME + '_stats.tsv')).open('w', newline='')\
+            as resultfh:
+        writer = csv.writer(resultfh, delimiter='\t',
+                            quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['#' + STAT_COLS[1]] +
+                        list(STAT_COLS[2:]) + [STAT_COLS[0]])
         for row in stats:
             writer.writerow(list(row[1:]) + [row[0]])
     #
@@ -34,7 +40,7 @@ def process_logs(stats, logger):
     for handler in logger.handlers:
         try:
             logfile_names.append(handler.stream.name)
-        except:
+        except AttributeError:
             pass
     logfile_names.remove('<stderr>')
     logfile_path = Path(logfile_names[0])
@@ -81,21 +87,22 @@ def process_logs(stats, logger):
                                   columns=['value', 'record', 'file'])
         stat_len = len(stat_frame)
         if stat_len > 0:
-            stat_frame = stat_frame.sort_values(['value', 'record','file'])
+            stat_frame = stat_frame.sort_values(['value', 'record', 'file'])
             stat_frame.to_csv(LOG_PATH/(stat_name.rstrip('%')+'.tsv'),
                               sep='\t',
                               index=False,
-                              header=['#'+stat_name,'id', 'file'])
+                              header=['#'+stat_name, 'id', 'file'])
             if stat_len > MIN_HIST_LEN:
                 dist = np.array(stat_frame['value'])
                 make_histogram(dist, stat_name, log10=True)
     for graph_name in GRAPH_TYPES:
         graph_frame = pd.DataFrame(graph_dict[graph_name],
-                                   columns=['file','id','duplicate'])
+                                   columns=['file', 'id', 'duplicate'])
         graph_len = len(graph_frame)
         if graph_len > 0:
             graph_frame = graph_frame.sort_values(['file', 'id', 'duplicate']
-                                                  ).reindex(index=list(range(graph_len)))
+                                                  ).reindex(index=list(
+                                                    range(graph_len)))
             graph_frame.to_csv(LOG_PATH/(graph_name+'.tsv'),
                                sep='\t',
                                index=False,

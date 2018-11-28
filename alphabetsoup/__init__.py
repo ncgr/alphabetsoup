@@ -24,13 +24,15 @@ import coverage
 import dask.bag as db
 import pandas as pd
 from dask.diagnostics import ProgressBar
+from pathlib import Path
 #
 # package imports
 #
 from .version import version as VERSION
 from .process_file import process_file
 from .process_logs import process_logs
-from .common import *
+from .common import make_histogram, STAT_COLS, PROGRAM_NAME,\
+    LOG_PATH, MIN_HIST_LEN, LOG_DIR
 #
 # Start coverage
 #
@@ -40,22 +42,22 @@ for localename in ['en_US', 'en_US.utf8', 'English_United_States']:
     try:
         locale.setlocale(locale.LC_ALL, localename)
         break
-    except:
+    except locale.Error:
         continue
 
 AUTHOR = 'Joel Berendzen'
 EMAIL = 'joelb@ncgr.org'
-COPYRIGHT = """Copyright (C) 2018, The National Center for Genome Resources.  All rights reserved.
+COPYRIGHT = """Copyright (C) 2018, NCGR. All rights reserved.
 """
 PROJECT_HOME = 'https://github.com/ncgr/alphabetsoup'
 
 DEFAULT_FILE_LOGLEVEL = logging.DEBUG
 DEFAULT_STDERR_LOGLEVEL = logging.INFO
-DEFAULT_FIRST_N = 0 # only process this many files
+DEFAULT_FIRST_N = 0  # only process this many files
 STARTTIME = datetime.now()
-DEFAULT_MINLEN = 0 # minimum gene size in residues
-DEFAULT_MINSEQS = 0 # minimum number of sequences per file
-DEFAULT_MAXAMBIG = 0.0 # maximum number of ambiguous characters per gene, (0 = all)
+DEFAULT_MINLEN = 0  # minimum gene size in residues
+DEFAULT_MINSEQS = 0  # minimum number of sequences per file
+DEFAULT_MAXAMBIG = 0.0  # max number of ambiguous characters, (0.0 = all)
 DEFAULT_FILETYPES = ('*.faa', '*.fa', '*.fasta')
 #
 # global logger object
@@ -65,11 +67,13 @@ logger = logging.getLogger(PROGRAM_NAME)
 # private context function
 #
 _ctx = click.get_current_context
+
+
 #
 # Classes
 #
 class CleanInfoFormatter(logging.Formatter):
-    def __init__(self, fmt = '%(levelname)s: %(message)s'):
+    def __init__(self, fmt='%(levelname)s: %(message)s'):
         logging.Formatter.__init__(self, fmt)
 
     def format(self, record):
@@ -102,7 +106,7 @@ def init_dual_logger(file_log_level=DEFAULT_FILE_LOGLEVEL,
             stderrHandler.setFormatter(stderrFormatter)
             stderrHandler.setLevel(_log_level)
             logger.addHandler(stderrHandler)
-            if _ctx().params['log']: # start a log file in LOG_PATH
+            if _ctx().params['log']:  # start a log file in LOG_PATH
                 logfile_path = LOG_PATH / (PROGRAM_NAME + '.log')
                 if not LOG_PATH.is_dir():  # create LOG_PATH
                     try:
@@ -116,11 +120,12 @@ def init_dual_logger(file_log_level=DEFAULT_FILE_LOGLEVEL,
                         try:
                             logfile_path.unlink()
                         except OSError:
-                            logger.error('Unable to remove existing log file "%s"',
+                            logger.error('Unable to remove log file "%s"',
                                          logfile_path)
                             raise OSError
                 logfileHandler = logging.FileHandler(str(logfile_path))
-                logfileFormatter = logging.Formatter('%(levelname)s: %(message)s')
+                logfileFormatter = logging.Formatter(
+                    '%(levelname)s: %(message)s')
                 logfileHandler.setFormatter(logfileFormatter)
                 logfileHandler.setLevel(file_log_level)
                 logger.addHandler(logfileHandler)
@@ -165,15 +170,15 @@ def init_user_context_obj(initial_obj=None):
 @click.option('--progress', is_flag=True, show_default=True,
               default=False, help='Show a progress bar.')
 @click.option('--first_n', default=DEFAULT_FIRST_N,
-               help='Process only this many files. [default: all]')
-@click.option('--minlen', default=DEFAULT_MINLEN,show_default=True,
-               help='Minimum sequence length.')
-@click.option('--minseqs', default=DEFAULT_MINSEQS,show_default=True,
-               help='Minimum sequences in file.')
+              help='Process only this many files. [default: all]')
+@click.option('--minlen', default=DEFAULT_MINLEN, show_default=True,
+              help='Minimum sequence length.')
+@click.option('--minseqs', default=DEFAULT_MINSEQS, show_default=True,
+              help='Minimum sequences in file.')
 @click.option('--maxambig', default=DEFAULT_MAXAMBIG,
-               help='Max fraction ambiguous. [default:any]')
+              help='Max fraction ambiguous. [default:any]')
 @click.option('--log/--no-log', is_flag=True, show_default=True,
-              default=True, help='Write analysis in ./' + LOG_DIR +'.')
+              default=True, help='Write analysis in ./' + LOG_DIR + '.')
 @click.option('--lengths/--no-lengths', is_flag=True,
               show_default=True, default=True, help='Compute lengths.')
 @click.option('--dedup/--no-dedup', is_flag=True, show_default=True,
@@ -248,16 +253,16 @@ def cli(in_path,
                       columns=STAT_COLS)
     if not quiet:
         print('Quantity\tSum\tMean')
-        print('%s:\t%d\t0' %('Files'.rjust(max_qty_len), len(files)))
+        print('%s:\t%d\t0' % ('Files'.rjust(max_qty_len), len(files)))
 
     for stat_name in STAT_COLS[1:]:
         dist = df[stat_name]
         stat_len = len(dist)
         mean = dist.mean()
         if not quiet:
-            print('%s:\t%d\t%.3f'%(stat_name.rjust(max_qty_len),
-                               dist.sum(),
-                               mean))
-        if log and max(dist)>0 and stat_len > MIN_HIST_LEN:
+            print('%s:\t%d\t%.3f' % (stat_name.rjust(max_qty_len),
+                                     dist.sum(),
+                                     mean))
+        if log and max(dist) > 0 and stat_len > MIN_HIST_LEN:
             make_histogram(dist, stat_name)
     sys.exit(0)

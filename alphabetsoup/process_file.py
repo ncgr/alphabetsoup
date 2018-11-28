@@ -7,21 +7,28 @@ from operator import itemgetter
 from Bio import SeqIO
 from Bio.Data import IUPACData
 # package imports
-from .common import *
+from .common import SHORT_NAME, DUP_NAME, AMBIG_NAME, SUBSTRING_NAME,\
+    FILESMALL_NAME, LENGTH_NAME
 
 ALPHABET = IUPACData.protein_letters + 'X' + '-'
 LOGINT_FMT = '%s\t%s\t%s\t%d'
 LOGFLOAT_FMT = '%s\t%s\t%s\t%f'
 LOGSTR_FMT = '%s\t%s\t%s\t%s'
 
+
 class DuplicateIDDict(defaultdict):
     """A dictionary of lists with a get() that returns a mangled ID
     """
-    def __init__(self):
+
+    def __init__(self, concat=False):
+        self.concat = concat
         super().__init__(list)
 
-    def get(self,k):
-        return '|'.join([k] + self[k])
+    def get(self, k):
+        if self.concat:
+            return '|'.join([k] + self[k])
+        else:
+            return k
 
 
 def process_file(file,
@@ -51,8 +58,8 @@ def process_file(file,
             seq = record.seq.upper().tomutable()
             if remove_dashes:
                 # delete '-' as insertion characters in an alignment
-                [ seq.pop(dash_pos-k) for k, dash_pos in
-                    enumerate([i for i,j in enumerate(seq) if j == '-'])]
+                [seq.pop(dash_pos-k) for k, dash_pos in
+                    enumerate([i for i, j in enumerate(seq) if j == '-'])]
             # replace everything else out of alphabet with 'X'-
             [seq.__setitem__(i, 'X')
              for i, j in enumerate(seq) if j not in ALPHABET]
@@ -73,7 +80,7 @@ def process_file(file,
                                  len(record.seq))
                 continue
             # count duplicates and optionally discard
-            seq_hash = zlib.adler32(bytearray(str(seq),'utf-8'))
+            seq_hash = zlib.adler32(bytearray(str(seq), 'utf-8'))
             if seq_hash not in seq_hash_dict:
                 seq_hash_dict[seq_hash] = record.id
             else:
@@ -88,7 +95,7 @@ def process_file(file,
                                  first_ID)
                     continue
             # count interior X's and discard if more than max_ambiguous
-            ambig = sum([i =='X' for i in seq])
+            ambig = sum([i == 'X' for i in seq])
             if ambig > max_ambiguous:
                 n_ambig += 1
                 if logger:
@@ -101,16 +108,17 @@ def process_file(file,
             record.seq = seq.toseq()
             out_sequences.append(record)
     # Search for exact substring matches in the set
-    length_idx = [(i,len(record.seq))
+    length_idx = [(i, len(record.seq))
                   for i, record in enumerate(out_sequences)]
     length_idx.sort(key=itemgetter(1))
-    ascending = [idx for idx,length in length_idx]
+    ascending = [idx for idx, length in length_idx]
     subst_removal_list = []
-    for item_num,idx in enumerate(ascending):
+    for item_num, idx in enumerate(ascending):
         test_seq = out_sequences[idx].seq
         test_id = out_sequences[idx].id
         # traverse from biggest to smallest to find the biggest match
-        for record in [out_sequences[i] for i in reversed(ascending[item_num+1:])]:
+        for record in [out_sequences[i] for i in
+                       reversed(ascending[item_num+1:])]:
             if str(test_seq) in str(record.seq):
                 n_substrings += 1
                 duplicate_ID_dict[record.id].append(test_id)
@@ -156,10 +164,10 @@ def process_file(file,
     if write:
         if not small:
             with file.open('w') as output_handle:
-                SeqIO.write(out_sequences,output_handle,'fasta')
+                SeqIO.write(out_sequences, output_handle, 'fasta')
         else:
-            logger.debug('file %s has only %d sequences after processing, removed',
-                        file.name, len(out_sequences))
+            logger.debug('file %s has only %d sequences, removed',
+                         file.name, len(out_sequences))
             file.unlink()
     return (file.name,
             n_seqs_in,

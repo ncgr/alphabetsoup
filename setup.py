@@ -18,7 +18,6 @@ from setuptools import setup, find_packages
 # Version restrictions and dependencies
 if sys.version_info < (3, 4, 0, 'final', 0):
     raise SystemExit("This package requires python 3.4 or higher.")
-from pathlib import Path  # python 3.4
 
 NAME = 'alphabetsoup'
 
