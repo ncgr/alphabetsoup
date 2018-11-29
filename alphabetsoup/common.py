@@ -20,19 +20,25 @@ LENGTH_NAME = 'Length'
 LOG_TYPES = [LENGTH_NAME]
 STAT_TYPES = NUMBER_TYPES + LOG_TYPES
 STAT_COLS = ['name',
-             'seqs_in',
-             'seqs_out',
-             'residues',
-             'n_ambig',
-             'n_short',
-             'n_small',
-             'n_dups',
-             'n_substr']
+             'in_c',
+             'out_c',
+             'dash_c',
+             'bad_c',
+             'end_c',
+             'in_s',
+             'out_s',
+             'ambig_s',
+             'short_s',
+             'dup_s',
+             'substr_s',
+             'small_f'
+             ]
 MIN_HIST_LEN = 5
 MAX_BINS = 10
 PLOT_TYPES = ['png', 'svg']
 LOG_DIR = 'log'
 LOG_PATH = Path('.') / LOG_DIR
+SEQ_FILE_TYPE = 'fasta'
 
 
 def make_histogram(dist, name, log10=False):

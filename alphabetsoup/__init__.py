@@ -237,12 +237,12 @@ def cli(in_path,
                       min_len=minlen,
                       min_seqs=minseqs,
                       max_ambiguous=maxambig,
-                      remove_duplicates=dedup,
+                      remove_dups=dedup,
                       remove_dashes=stripdash,
                       remove_substrings=defrag,
                       lengths=lengths).compute()
     if log:
-        if not quiet:
+        if progress and not quiet:
             logger.info('Processing log files serially:')
         process_logs(results, logger)
     #
