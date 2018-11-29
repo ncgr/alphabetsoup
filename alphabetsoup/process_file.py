@@ -5,6 +5,7 @@ import zlib
 from collections import defaultdict
 from operator import itemgetter
 # third-party imports
+import numpy as np
 from Bio import SeqIO
 from Bio.Data import IUPACData
 # package imports
@@ -323,10 +324,18 @@ def process_file(file,
         if write:
             with file.open('w') as output_handle:
                 SeqIO.write(out_sequences, output_handle, SEQ_FILE_TYPE)
+    lengths_arr = np.array([len(s) for s in out_sequences])
+    length_std = lengths_arr.std()
+    length_mean = lengths_arr.mean() + 0.5
+    if np.isnan(length_std):
+        length_std_percent = 0
+    else:
+        length_std_percent = int(round(length_std*100/length_mean))
+
     return (file.name,
             # character stats
             sanitizer.chars_in,
-            sum([len(s) for s in out_sequences]),
+            lengths_arr.sum(),
             sanitizer.chars_removed,
             sanitizer.chars_fixed,
             sanitizer.endchars_removed,
@@ -338,4 +347,5 @@ def process_file(file,
             duplicated.exact_count,
             duplicated.substring_count,
             # file stats
+            length_std_percent,
             small)

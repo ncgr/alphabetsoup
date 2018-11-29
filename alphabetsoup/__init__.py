@@ -252,7 +252,7 @@ def cli(in_path,
     df = pd.DataFrame(results,
                       columns=STAT_COLS)
     if not quiet:
-        print('Quantity\tSum\tMean')
+        print('Quantity\tSum\tMax\tMin\tMean')
         print('%s:\t%d\t0' % ('Files'.rjust(max_qty_len), len(files)))
 
     for stat_name in STAT_COLS[1:]:
@@ -260,8 +260,10 @@ def cli(in_path,
         stat_len = len(dist)
         mean = dist.mean()
         if not quiet:
-            print('%s:\t%d\t%.3f' % (stat_name.rjust(max_qty_len),
+            print('%s:\t%d\t%d\t%d\t%.3f' % (stat_name.rjust(max_qty_len),
                                      dist.sum(),
+                                     max(dist),
+                                     min(dist),
                                      mean))
         if log and max(dist) > 0 and stat_len > MIN_HIST_LEN:
             make_histogram(dist, stat_name)

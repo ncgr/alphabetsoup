@@ -30,7 +30,8 @@ STAT_COLS = ['name',
              'ambig_s',
              'short_s',
              'dup_s',
-             'substr_s',
+             'sub_s',
+             'std%_f',
              'small_f'
              ]
 MIN_HIST_LEN = 5
