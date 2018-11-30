@@ -4,13 +4,14 @@
 import zlib
 from collections import defaultdict
 from operator import itemgetter
-# third-party imports
-import numpy as np
+
 from Bio import SeqIO
 from Bio.Data import IUPACData
-# package imports
-from .common import SHORT_NAME, DUP_NAME, AMBIG_NAME, SUBSTRING_NAME,\
-     LENGTH_NAME, SEQ_FILE_TYPE
+
+import numpy as np
+
+from .common import AMBIG_NAME, DUP_NAME, LENGTH_NAME,\
+    SEQ_FILE_TYPE, SHORT_NAME, SUBSTRING_NAME
 
 ALPHABET = IUPACData.protein_letters + 'X' + '-'
 LOGINT_FMT = '%s\t%s\t%s\t%d'

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 # imports
 from pathlib import Path
+
 import matplotlib.pyplot as plt
+
 import numpy as np
+
 import seaborn as sns
 # global variables
 PROGRAM_NAME = 'alphabetsoup'

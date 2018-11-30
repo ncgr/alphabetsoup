@@ -7,32 +7,30 @@ Ambiguous residues at end - strip
 Codes other than IUPAC + 'X' elsewhere - change to X
 Length shorter than MINLEN - delete whole entry
 """
-#
 # standard library imports
-#
 import functools
 import locale
 import logging
 import sys
 import warnings
 from datetime import datetime
-#
-# third-party imports
-#
-import click
-import coverage
-import dask.bag as db
-import pandas as pd
-from dask.diagnostics import ProgressBar
 from pathlib import Path
-#
-# package imports
-#
-from .version import version as VERSION
+
+import click
+
+import coverage
+
+import dask.bag as db
+from dask.diagnostics import ProgressBar
+
+import pandas as pd
+
+from .common import LOG_DIR, LOG_PATH, MIN_HIST_LEN, PROGRAM_NAME,\
+    STAT_COLS, make_histogram
 from .process_file import process_file
 from .process_logs import process_logs
-from .common import make_histogram, STAT_COLS, PROGRAM_NAME,\
-    LOG_PATH, MIN_HIST_LEN, LOG_DIR
+from .version import version as VERSION
+
 #
 # Start coverage
 #
@@ -58,7 +56,7 @@ STARTTIME = datetime.now()
 DEFAULT_MINLEN = 0  # minimum gene size in residues
 DEFAULT_MINSEQS = 0  # minimum number of sequences per file
 DEFAULT_MAXAMBIG = 0.0  # max number of ambiguous characters, (0.0 = all)
-DEFAULT_FILETYPES = ('*.faa', '*.fa', '*.fasta')
+DEFAULT_GLOB = '*.faa'
 #
 # global logger object
 #
@@ -189,6 +187,8 @@ def init_user_context_obj(initial_obj=None):
               default=True, help='Remove "-" characters.')
 @click.option('--overwrite/--no-overwrite', is_flag=True, show_default=True,
               default=False, help='Overwrite input files.')
+@click.option('--pattern', default=DEFAULT_GLOB, show_default=True,
+              help='File pattern to match.')
 @click.argument('in_path', type=click.Path(exists=True,
                                            writable=True,
                                            resolve_path=True,
@@ -210,7 +210,8 @@ def cli(in_path,
         dedup,
         stripdash,
         defrag,
-        lengths):
+        lengths,
+        pattern):
     """alphabetsoup -- fix alphabet and other problems in protein FASTA files
     """
     if quiet or verbose:
@@ -221,10 +222,12 @@ def cli(in_path,
         warnings.filterwarnings('ignore')
 
     logger.debug('')
-    in_path = Path(in_path)
-    files = []
-    for ext in DEFAULT_FILETYPES:
-        files.extend(in_path.rglob(ext))
+    files_path = Path(in_path)
+    files = list(files_path.rglob(pattern))
+    if len(files) == 0:
+        logger.error('No files matching pattern "%s" found in %s',
+                     pattern, in_path)
+        sys.exit(1)
     if first_n > 0 and len(files) > first_n:
         files = files[:first_n]
     if progress and not quiet:
@@ -253,7 +256,6 @@ def cli(in_path,
                       columns=STAT_COLS)
     if not quiet:
         print('Quantity\tSum\tMax\tMin\tMean')
-        print('%s:\t%d\t0' % ('Files'.rjust(max_qty_len), len(files)))
 
     for stat_name in STAT_COLS[1:]:
         dist = df[stat_name]
@@ -261,10 +263,11 @@ def cli(in_path,
         mean = dist.mean()
         if not quiet:
             print('%s:\t%d\t%d\t%d\t%.3f' % (stat_name.rjust(max_qty_len),
-                                     dist.sum(),
-                                     max(dist),
-                                     min(dist),
-                                     mean))
+                                             dist.sum(),
+                                             max(dist),
+                                             min(dist),
+                                             mean))
         if log and max(dist) > 0 and stat_len > MIN_HIST_LEN:
             make_histogram(dist, stat_name)
+    print('%s:\t%d\t1\t0\t1' % ('in_f'.rjust(max_qty_len), len(files)))
     sys.exit(0)

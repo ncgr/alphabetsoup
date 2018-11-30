@@ -6,16 +6,13 @@ import csv
 import json
 import logging
 from pathlib import Path
-#
-# third-party imports
-#
+
 import numpy as np
+
 import pandas as pd
-#
-# module imports
-#
-from .common import make_histogram, STAT_COLS, LOG_PATH, PROGRAM_NAME,\
-    STAT_TYPES, MIN_HIST_LEN, GRAPH_TYPES, FLOAT_TYPES
+
+from .common import FLOAT_TYPES, GRAPH_TYPES, LOG_PATH, MIN_HIST_LEN,\
+    PROGRAM_NAME, STAT_COLS, STAT_TYPES, make_histogram
 #
 # read values from the log file and make optional plots
 #
