@@ -10,7 +10,7 @@ cloudpickle==0.6.1
 coverage==4.5.2
 cycler==0.10.0            # via matplotlib
 dask==1.0.0
-kiwisolver==1.0.1         # via matplotlib
+kiwisolver==1.2.0         # via matplotlib
 matplotlib==3.0.2
 numpy==1.15.4             # via biopython, matplotlib, pandas, scipy, seaborn
 pandas==0.23.4
