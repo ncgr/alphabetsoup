@@ -63,10 +63,6 @@ build/
 env/
 tmp/
 
-# version #
-###########
-version.py
-
 # files with secrets #
 ######################
 crashmail_email.txt
