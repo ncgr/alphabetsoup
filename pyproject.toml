@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "alphabetsoup"
-version = "0.5.4"
+version = "0.5.4-post.1+472170d"
 description = "tile phylogenetic space with subtrees"
 authors = ["Joel Berendzen <joelb@ncgr.org>"]
 license = "BSD-3-Clause"

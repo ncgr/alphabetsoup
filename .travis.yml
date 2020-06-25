@@ -10,14 +10,7 @@ before_script:
    - export COVERAGE_PROCESS_START="${PWD}/.coveragerc"
    - cd alphabetsoup/tests/testdata
 script:
-   - alphabetsoup --help
-   - alphabetsoup --version
-   - alphabetsoup --dedup  --no-log --first_n 1 --log_lengths -v .
-   - alphabetsoup --minlen 200 --no-stripdash -q .
-   - alphabetsoup -v .
-   - alphabetsoup --defrag --overwrite --progress --maxambig 1 .
-   - cat logs/alphabetsoup.log
-   - cat logs/alphabetsoup.tsv
+   - nox -s tests
 after_success:
    - coverage combine
    - cp /tmp/.coverage .
