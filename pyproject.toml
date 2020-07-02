@@ -40,7 +40,7 @@ dask = {extras = ["bag"], version = "^2.15.0"}
 matplotlib = "^3.2.1"
 pandas = "^1.0.3"
 seaborn = "^0.10.1"
-click_loguru = "^0.3.3"
+click_loguru = ">=0.3.3,<1.1.0"
 toolz = "^0.10.0"
 cloudpickle = "^1.4.1"
 
