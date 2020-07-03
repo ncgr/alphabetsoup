@@ -232,7 +232,7 @@ description = "Parallel PyData with Task Scheduling"
 name = "dask"
 optional = false
 python-versions = ">=3.6"
-version = "2.19.0"
+version = "2.20.0"
 
 [package.dependencies]
 pyyaml = "*"
@@ -1051,8 +1051,8 @@ cycler = [
     {file = "cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
 ]
 dask = [
-    {file = "dask-2.19.0-py3-none-any.whl", hash = "sha256:a71db1cef556e9930a8da35f820dc73024102810f5670e1c258c706ff5076edc"},
-    {file = "dask-2.19.0.tar.gz", hash = "sha256:e18035cebc2a32e9d483f76d7718f846e95a0f75e6b0fe192a21328c236a465b"},
+    {file = "dask-2.20.0-py3-none-any.whl", hash = "sha256:170257ba29f5a898a4d01a21cd4f8d0e871e59c4ce7dccd254d15d1c679a0b66"},
+    {file = "dask-2.20.0.tar.gz", hash = "sha256:2e6eea7bbc2eaaad8facd0ea748e5a3fee3a79a6e81c8a5445c84d737bd6efce"},
 ]
 distlib = [
     {file = "distlib-0.3.0.zip", hash = "sha256:2e166e231a26b36d6dfe35a48c4464346620f8645ed0ace01ee31822b288de21"},
