@@ -45,7 +45,7 @@ toolz = "^0.10.0"
 cloudpickle = "^1.4.1"
 
 [tool.poetry.dev-dependencies]
-pytest-cov = "^2.8.1"
+pytest-cov = "^2.10.1"
 black = {version = "^19.10b0", allow-prereleases = true}
 pre-commit = "^2.3.0"
 pydocstyle = "^5.0.2"
