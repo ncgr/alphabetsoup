@@ -36,7 +36,7 @@ classifiers = [
 python = "^3.6.1"
 biopython = "^1.76"
 click = "^7.1.2"
-dask = {extras = ["bag"], version = "^2.15.0"}
+dask = {extras = ["bag"], version = ">=2.15,<2021.0"}
 matplotlib = "^3.2.1"
 pandas = "^1.0.3"
 seaborn = "^0.10.1"
