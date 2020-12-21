@@ -52,7 +52,7 @@ pydocstyle = "^5.0.2"
 isort = {version = "^4.3.21", extras = ["pyproject"]}
 sh = "^1.13.0"
 pylint = "^2.5.2"
-coverage = {extras = ["toml"], version = "^5.1"}
+coverage = {extras = ["toml"], version = "^5.3"}
 pytest-datadir-mgr = "^1.0.1"
 nox = "^2020.5.24"
 flynt = "^0.48.1"
